@@ -10,7 +10,7 @@ Install sphinx
 
 .. code-block:: shell
 	
-	pip install sphinx
+	sudo pip install Sphinx
 
 Clone this repository and from its root, run:
 
