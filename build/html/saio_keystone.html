@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SAIO with Keystone Integration &mdash; Openstack Tutorials 1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="Openstack Tutorials 1.0 documentation" href="index.html"/>
+        <link rel="prev" title="Welcome to Openstack Tutorials" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Openstack Tutorials
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">SAIO with Keystone Integration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-up-swift-with-saio">Setting up Swift with SAIO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication-tempauth">Authentication TempAuth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#authentication-keystone">Authentication Keystone</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#service-entry-and-api-endpoints">Service Entry and API Endpoints</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verifying-keystone-installation">Verifying Keystone Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integrating-saio-with-keystone">Integrating SAIO with Keystone</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#verifying-saio-and-keystone-integration">Verifying SAIO and Keystone Integration</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">Openstack Tutorials</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>SAIO with Keystone Integration</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/saio_keystone.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="saio-with-keystone-integration">
+<h1>SAIO with Keystone Integration<a class="headerlink" href="#saio-with-keystone-integration" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="setting-up-swift-with-saio">
+<h2>Setting up Swift with SAIO<a class="headerlink" href="#setting-up-swift-with-saio" title="Permalink to this headline">¶</a></h2>
+<p>Devstack is the de facto starting point for developers who want to get started with Openstack. It is a shell script which deploys a minimal openstack on a single machine. We can deploy Swift using devstack, however, the cryptic nature of scripts keep us from understanding what’s happening under the hood.</p>
+<p><a class="reference external" href="http://docs.openstack.org/developer/swift/development_saio.html">Swift All In One (SAIO)</a> is the suggested way to deploy Swift on a single machine if you want to get familiar with the process. It is also preferred by Swift developers. If you follow along the documentation, you will end up with a machine emulating a four node swift cluster.</p>
+<p>It assumes a single machine with Ubuntu 14.04 however, it provides alternative instructions for Fedora and CentOS. In order to emulate four nodes, it asks you to attach an additional storage device or use a loop-back device (filesystem on a file). If you’re setting swift up in a virtual machine, adding a device boils down to just a few clicks.</p>
+<p>There is one bug in SAIO documentation. If you’re using Ubuntu 14.04 LTS, you need to update python-six and python-eventlet in order to pass the unit tests. Since these packages are managed by apt, they cannot be updated by pip and 14.04 LTS repository doesn’t support the required version. I had to hang out on swift’s IRC channel to figure out the problem and its solution.</p>
+<p>In order to resolve this issue, run the following commands before running the unit-tests and you are good to go.</p>
+<div class="highlight-shell"><div class="highlight"><pre>sudo sh -c <span class="se">\ </span><span class="s2">&quot;echo &#39;deb http://archive.ubuntu.com/ubuntu/ /&quot;</span><span class="se">\</span>
+<span class="s2">&quot;vivid main restricted&#39; &gt; /etc/apt/sources.list.d/saio_sources.list&quot;</span>
+
+sudo sh -c <span class="s2">&quot;echo &#39;deb-src http://archive.ubuntu.com/ubuntu/ /&quot;</span><span class="se">\</span>
+<span class="s2">&quot;vivid main restricted&#39; &gt;&gt; /etc/apt/sources.list.d/saio_sources.list&quot;</span>
+
+sudo apt-get update
+
+sudo apt-get install python-eventlet python-six python-six-whl
+
+sudo sed -i s/deb/#deb/g /etc/apt/sources.list.d/saio_sources.list
+
+sudo apt-get update
+</pre></div>
+</div>
+</div>
+<div class="section" id="authentication-tempauth">
+<h2>Authentication TempAuth<a class="headerlink" href="#authentication-tempauth" title="Permalink to this headline">¶</a></h2>
+<p>Swift comes with a lightweight authentication system called TempAuth. It is meant for trying out Swift and is easy to work with. However, it is not recommended to use TempAuth in production environments because of its limited capabilities.</p>
+<p>If you have installed Swift using SAIO, you have already tried out TempAuth. In step 11 (SAIO), you typed in the following command to retrieve X-Storage-Url and X-Auth-Token from TempAuth.</p>
+<div class="highlight-shell"><div class="highlight"><pre>curl -v -H <span class="s1">&#39;X-Storage-User: test:tester&#39;</span> <span class="se">\</span>
+-H <span class="s1">&#39;X-Storage-Pass: testing&#39;</span> http://127.0.0.1:8080/auth/v1.0
+</pre></div>
+</div>
+<p>In the above command, you are passing test:tester as user, and testing as password to TempAuth to retrieve a token. Let’s see how TempAuth is configured with this username and password.</p>
+<p>In /etc/swift/proxy-server.conf file, we have a filter for TempAuth as shown in the following screenshot. The fourth line, with yellow boxes represents the user <strong>test:tester</strong> with password <strong>testing</strong> and role <strong>admin</strong>. Any user not listed in this filter will not get authenticated.</p>
+<a class="reference internal image-reference" href="_images/img1.png"><img alt="_images/img1.png" src="_images/img1.png" style="width: 352.8px; height: 94.0px;" /></a>
+<p>It is worth mentioning that Swift uses TempAuth as a middleware. In fact, any authentication service we use with Swift would be a configured as a middleware intercepting requests to the Proxy Server. In /etc/swift/proxy-server.conf file, we can see TempAuth in the pipeline configuration.</p>
+<img alt="_images/img2.png" src="_images/img2.png" />
+<p>The pipeline terminates with the service application we are configuring which is proxy-server in this case.</p>
+</div>
+<div class="section" id="authentication-keystone">
+<h2>Authentication Keystone<a class="headerlink" href="#authentication-keystone" title="Permalink to this headline">¶</a></h2>
+<p>Keystone is the official Openstack authentication solution that works across different projects in Openstack family. If you are using swift along with other projects in Openstack suite, Keystone is the recommend authentication system.</p>
+<p>We will now set up Keystone and integrate.</p>
+<div class="highlight-shell"><div class="highlight"><pre>sudo apt-get install keystone
+</pre></div>
+</div>
+<p>In order to use keystone, we need to provide a username and a password. Since, there is no user registered with keystone yet, we will bootstrap the process by setting up an <strong>ADMIN_TOKEN</strong> in keystone configuration file.</p>
+<p>Creating a random token using <strong>openssl</strong>.</p>
+<div class="highlight-shell"><div class="highlight"><pre>openssl rand -hex 10
+</pre></div>
+</div>
+<p>Replace <strong>ADMIN_TOKEN</strong> in /etc/keystone/keystone.conf file with the result of previous command.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="o">[</span>DEFAULT<span class="o">]</span>
+<span class="c"># A &quot;shared secret&quot; that can be used to bootstrap Keystone.</span>
+<span class="nv">admin_token</span> <span class="o">=</span> ADMIN_TOKEN
+...
+</pre></div>
+</div>
+<p>Restart keystone service for the changes to take effect.</p>
+<div class="highlight-shell"><div class="highlight"><pre>sudo service keystone restart
+</pre></div>
+</div>
+<p>Now we can bootstrap keystone with <strong>ADMIN_TOKEN</strong>. We also need to specify where Identity service is running (end-point). By default, Keystone uses port 35357 and 5000. Port 35357 exposes admin-level API.</p>
+<p>Let’s do a sanity check and <strong>discover</strong> keystone servers, supported API versions and extension using the <strong>ADMIN_TOKEN</strong> we just set.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone --os-token ADMIN_TOKEN --os-endpoint http://localhost:35357/v2.0 discover
+</pre></div>
+</div>
+<p>If you are using keystone client from a different machine than the one running keystone service, you can plug its IP address in place of <strong>localhost</strong> in the above command.</p>
+<p>We can set OS_SERVICE_TOKEN and OS_SERVICE_ENDPOINT environment variables to make our lives easier while working with keystone.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="nb">export </span><span class="nv">OS_SERVICE_TOKEN</span><span class="o">=</span>ADMIN_TOKEN
+<span class="nb">export </span><span class="nv">OS_SERVICE_ENDPOINT</span><span class="o">=</span>http://localhost:35357/v2.0
+</pre></div>
+</div>
+<p>Now we can discover simply by typing in:</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone discover
+</pre></div>
+</div>
+<p>We will now create administrative user, tenant and role.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone user-create --name admin --pass ADMIN_PASS --email ADMIN_EMAIL
+keystone role-create --name admin
+keystone tenant-create --name admin --description <span class="s2">&quot;Admin Tenant&quot;</span>
+</pre></div>
+</div>
+<p>Linking admin user, admin role and admin tenant.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone user-role-add --user admin --tenant admin --role admin
+</pre></div>
+</div>
+<p>By default, Keystone has a _member_ role. The Openstack dashboard automatically grants access to users with this role. We will assign admin user access to this role in addition to the admin role.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone user-role-add --user admin --role _member_ --tenant admin
+</pre></div>
+</div>
+<p>Openstack services also make use of each other&#8217;s services. For example, Glance could make use of Swift for storing images, or Nova could use Glance for booting images. Thus, an Openstack service, just like an end-user, would require a username, tenant and role to access another Openstack service. Typically, Openstack services are grouped within a single tenant named <strong>service</strong>.</p>
+<p>Creating a <strong>service</strong> tenant.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone tenant-create --name service --description <span class="s2">&quot;Service Tenant&quot;</span>
+</pre></div>
+</div>
+<div class="section" id="service-entry-and-api-endpoints">
+<h3>Service Entry and API Endpoints<a class="headerlink" href="#service-entry-and-api-endpoints" title="Permalink to this headline">¶</a></h3>
+<p>Identity service essentially performs two tasks.</p>
+<ul class="simple">
+<li>Track users, tenants and roles</li>
+<li>Provide service catalogs for various Openstack services and their API endpoints</li>
+</ul>
+<p><strong>Since Keystone is a service itself, we need to register it along with its API endpoints in Keystone.</strong></p>
+<p>Creating a service entry for Keystone.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone service-create --name keystone --type identity <span class="se">\</span>
+--description <span class="s2">&quot;OpenStack Identity&quot;</span>
+</pre></div>
+</div>
+<p>Attaching API endpoints to the service using its ID. We specify three endpoints for admin API, public API and internal API.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone endpoint-create <span class="se">\</span>
+--service-id<span class="o">=</span> SERVICE_ID <span class="se">\</span>
+--publicurl<span class="o">=</span>http://localhost:5000/v2.0 <span class="se">\</span>
+--internalurl<span class="o">=</span>http://localhost:5000/v2.0 <span class="se">\</span>
+--adminurl<span class="o">=</span>http://localhost:35357/v2.0
+</pre></div>
+</div>
+<p>Replace <strong>SERVICE_ID</strong> with the returned service ID when we created service entry for Keystone.
+Trailing v2.0 in the URLs specify that API version 2.0 would be used for interactions.</p>
+<p>Later in this document, we will add a service entry for Object Storage (Swift) along with its API endpoints.</p>
+</div>
+<div class="section" id="verifying-keystone-installation">
+<h3>Verifying Keystone Installation<a class="headerlink" href="#verifying-keystone-installation" title="Permalink to this headline">¶</a></h3>
+<p>So far we have been bypassing authentication using the <strong>ADMIN_TOKEN</strong>. Now let’s take off the training wheels and use our newly created admin user to perform some tasks.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="nb">unset </span>OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT
+</pre></div>
+</div>
+<p>Requesting an authentication token using the admin user.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone --os-username admin --os-password ADMIN_PASS <span class="se">\</span>
+--os-auth-url http://localhost:35357/v2.0 token-get
+</pre></div>
+</div>
+<p>We get an authentication token paired with User ID. This verifies that the user account is established with expected credentials.</p>
+<p>We can also perform administrative tasks using the admin user. For example, retrieving list of users.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone --os-username admin --os-password ADMIN_PASS <span class="se">\</span>
+--os-auth-url http://localhost:35357/v2.0 user-list
+</pre></div>
+</div>
+<p>Let’s set environment variables for admin credentials to make command line interactions simpler. Create an admin-openrc.sh file as follows.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="nb">export </span><span class="nv">OS_USERNAME</span><span class="o">=</span>admin
+<span class="nb">export </span><span class="nv">OS_PASSWORD</span><span class="o">=</span>ADMIN_PASS
+<span class="nb">export </span><span class="nv">OS_TENANT_NAME</span><span class="o">=</span>admin
+<span class="nb">export </span><span class="nv">OS_AUTH_URL</span><span class="o">=</span>http://localhost:35357/v2.0
+</pre></div>
+</div>
+<p>Source the file for environment variables to take effect.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="nb">source </span>admin-openrc.sh
+</pre></div>
+</div>
+<p>Now retrieving user-list becomes a lot easier. Keystone client uses credentials of admin users behind the scenes.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone user-list
+</pre></div>
+</div>
+<p>We are all set with Identity service. We can now move on to integrate it with our SAIO deployment.</p>
+</div>
+<div class="section" id="integrating-saio-with-keystone">
+<h3>Integrating SAIO with Keystone<a class="headerlink" href="#integrating-saio-with-keystone" title="Permalink to this headline">¶</a></h3>
+<p>Let’s create a user <strong>swift</strong> which will be used by Swift Object Storage (proxy-server) to authenticate with the Identity service. We will associate this user with <strong>service</strong> tenant and assign it <strong>admin</strong> role.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone user-create --name swift --pass SWIFT_PASS <span class="se">\</span>
+--email swift@example.com
+
+keystone user-role-add --user swift --tenant service --role admin
+</pre></div>
+</div>
+<p>Replace <strong>SWIFT_PASS</strong> with the password of your choice.</p>
+<p>Creating a service entry for Swift Object Storage and attaching API endpoints to it using the service ID returned.</p>
+<div class="highlight-shell"><div class="highlight"><pre>keystone service-create --name<span class="o">=</span>swift --type<span class="o">=</span>object-store <span class="se">\</span>
+--description<span class="o">=</span><span class="s2">&quot;OpenStack Object Storage&quot;</span>
+
+keystone endpoint-create <span class="se">\</span>
+--service-id SERVICE_ID <span class="se">\</span>
+--publicurl <span class="s1">&#39;http://localhost:8080/v1/AUTH_%(tenant_id)s&#39;</span> <span class="se">\</span>
+--internalurl <span class="s1">&#39;http://localhost:8080/v1/AUTH_%(tenant_id)s&#39;</span> <span class="se">\</span>
+--adminurl http://localhost:8080
+</pre></div>
+</div>
+<p>Some key observations</p>
+<ul class="simple">
+<li>The URLs we have provided represent the proxy server since proxy server exposes Swift functionality to end users.</li>
+<li>AUTH_ <strong>tenant_id</strong> is appended with each URL which represents an account in swift.</li>
+</ul>
+<p>We will now configure proxy-server to use Keystone for authentication. In /etc/swift/proxy-server.conf file, make the following changes.</p>
+<p>Replace <strong>tempauth</strong> in pipeline with authtoken <strong>keystoneauth</strong>.</p>
+<p>I am copying pipeline configuration of my system here for your reference. I have marked authtoken and keystoneauth in bold.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="o">[</span>pipeline:main<span class="o">]</span>
+<span class="c"># Yes, proxy-logging appears twice. This is so that</span>
+<span class="c"># middleware-originated requests get logged too.</span>
+<span class="nv">pipeline</span> <span class="o">=</span> catch_errors gatekeeper healthcheck proxy-logging cache bulk tempurl ratelimit crossdomain container_sync authtoken keystoneauth staticweb container-quotas account-quotas slo dlo versioned_writes proxy-logging proxy-server
+</pre></div>
+</div>
+<p>Add configuration for authtoken and keystoneauth in /etc/swift/proxy-server.conf as following.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="o">[</span>filter:authtoken<span class="o">]</span>
+paste.filter_factory <span class="o">=</span> keystoneclient.middleware.auth_token:filter_factory
+<span class="nv">delay_auth_decision</span> <span class="o">=</span> <span class="nb">true</span>
+<span class="c"># auth_* settings refer to the Keystone server</span>
+<span class="nv">auth_protocol</span> <span class="o">=</span> http
+<span class="nv">auth_host</span> <span class="o">=</span> localhost
+<span class="nv">auth_port</span> <span class="o">=</span> 35357
+<span class="c"># the service tenant and swift username and password created in Keystone</span>
+<span class="nv">admin_tenant_name</span> <span class="o">=</span> service
+<span class="nv">admin_user</span> <span class="o">=</span> swift
+<span class="nv">admin_password</span> <span class="o">=</span> SWIFT_PASS
+
+<span class="o">[</span>filter:keystoneauth<span class="o">]</span>
+<span class="nv">use</span> <span class="o">=</span> egg:swift#keystoneauth
+<span class="nv">operator_roles</span> <span class="o">=</span> _member_,admin,swiftoperator
+</pre></div>
+</div>
+<p>Replace <strong>SWIFT_PASS</strong> with the password you set while creating swift user. Note the swiftoperator role in keystoneauth’s configuration. We will assign swiftoperator role to non-admin users who want to use Swift.</p>
+<p>Restart the proxy-server for the changes to take effect.</p>
+<div class="highlight-shell"><div class="highlight"><pre>sudo swift-init proxy restart
+</pre></div>
+</div>
+</div>
+<div class="section" id="verifying-saio-and-keystone-integration">
+<h3>Verifying SAIO and Keystone Integration<a class="headerlink" href="#verifying-saio-and-keystone-integration" title="Permalink to this headline">¶</a></h3>
+<p>Set up admin-openrc.sh file with credentials you want to use and source it. Since we have only added admin credentials yet, we will be using admin user in our interactions with swift.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="nb">source </span>admin-openrc.sh
+</pre></div>
+</div>
+<p>We will use swift stat command to display information about the admin user’s account.</p>
+<div class="highlight-shell"><div class="highlight"><pre>swift stat
+</pre></div>
+</div>
+<p>You should be getting a somewhat  similar output to the following.</p>
+<div class="highlight-shell"><div class="highlight"><pre><span class="c"># Expected Output</span>
+Account: AUTH_29b318f9f8ad45c9a76183da88fe3475
+Containers: 0
+Objects: 0
+Bytes: 0
+Content-Type: text/plain<span class="p">;</span> <span class="nv">charset</span><span class="o">=</span>utf-8
+X-Timestamp: 1446220756.04903
+X-Trans-Id: tx673b4af199794e939f6a9-00563393d3
+X-Put-Timestamp: 1446220756.04903
+</pre></div>
+</div>
+<p>Create a test.txt file and upload it to admin account in myfiles container. Swift will create myfiles container behind the scenes.</p>
+<div class="highlight-shell"><div class="highlight"><pre>swift upload myfiles test.txt
+</pre></div>
+</div>
+<p>Create another test2.txt file and upload it.</p>
+<div class="highlight-shell"><div class="highlight"><pre>swift upload myfiles test2.txt
+</pre></div>
+</div>
+<p>Download all files from myfiles container.</p>
+<div class="highlight-shell"><div class="highlight"><pre>swift download myfiles
+</pre></div>
+</div>
+<div class="highlight-shell"><div class="highlight"><pre><span class="c"># Expected output</span>
+test2.txt <span class="o">[</span>auth 0.175s, headers 0.195s, total 0.195s, 0.000 MB/s<span class="o">]</span>
+test.txt <span class="o">[</span>auth 0.182s, headers 0.199s, total 0.199s, 0.000 MB/s<span class="o">]</span>
+</pre></div>
+</div>
+<p>We have successfully installed SAIO in a single VM and integrated it with Keystone. If we want to allow a non-admin user to access Swift, we can create a new user and tenant, and tie them with swiftoperator role. Don’t forget to update admin-openrc.sh files with the credentials of the new user. You could also pass the credentials as parameters to override the environmental variables.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to Openstack Tutorials" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, Muhammad Zaheer.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
